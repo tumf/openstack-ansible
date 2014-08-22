@@ -1,0 +1,4 @@
+---
+- name: restart container services
+  service: name={{ item }} state=restarted
+  with_items: container_services

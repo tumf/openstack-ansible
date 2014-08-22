@@ -1,0 +1,2 @@
+- name: restart openstack-swift-proxy
+  service: name=openstack-swift-proxy state=restarted

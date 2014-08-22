@@ -1,0 +1,6 @@
+---
+- name: restart xinetd
+  service: name=xinetd state=restarted
+- name: rsync on
+  command: chkconfig rsync on
+  notify: restart xinetd

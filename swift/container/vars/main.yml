@@ -1,0 +1,6 @@
+---  
+container_services:
+  - openstack-swift-container
+  - openstack-swift-container-replicator
+  - openstack-swift-container-updater
+  - openstack-swift-container-auditor

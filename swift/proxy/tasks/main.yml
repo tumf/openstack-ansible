@@ -1,0 +1,13 @@
+---
+- yum: name="{{item}}" enablerepo="{{ epel_repo }},{{ openstack_repo }}"
+  with_items:
+    - openstack-swift-proxy
+    - python-swiftclient
+    - python-keystone-auth-token
+
+- service: name=openstack-swift-proxy state=running enabled=yes
+- service: name=openstack-swift-object-expirer state=running enabled=yes
+
+- template: src="proxy-server.conf.j2" dest="/etc/swift/proxy-server.conf"
+  notify: restart openstack-swift-proxy
+

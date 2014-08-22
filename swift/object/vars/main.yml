@@ -1,0 +1,6 @@
+---
+object_services:
+  - openstack-swift-object
+  - openstack-swift-object-replicator
+  - openstack-swift-object-updater
+  - openstack-swift-object-auditor

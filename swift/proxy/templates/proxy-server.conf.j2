@@ -1,0 +1,59 @@
+[DEFAULT]
+bind_port = 8080
+user = swift
+ 
+[pipeline:main]
+pipeline = catch_errors gatekeeper healthcheck proxy-logging  swift3 cache authtoken keystoneauth container_quotas account_quotas proxy-logging proxy-server
+ 
+[app:proxy-server]
+use = egg:swift#proxy
+allow_account_management = true
+account_autocreate = true
+ 
+[filter:keystoneauth]
+use = egg:swift#keystoneauth
+operator_roles = {{ operator_roles }}
+reseller_admin_role = {{ reseller_admin_role }}
+ 
+[filter:authtoken]
+paste.filter_factory = keystoneclient.middleware.auth_token:filter_factory
+ 
+# Delaying the auth decision is required to support token-less
+# usage for anonymous referrers ('.r:*').
+delay_auth_decision = true
+ 
+# auth_* settings refer to the Keystone server
+auth_protocol = {{ auth_protocol }}
+auth_host = {{ auth_host }}
+auth_uri = {{ auth_uri }}
+ 
+# the service tenant and swift username and password created in Keystone
+admin_tenant_name = {{ admin_tenant_name }}
+admin_user = {{ admin_user }}
+admin_password = {{ admin_password }}
+ 
+[filter:healthcheck]
+use = egg:swift#healthcheck
+ 
+[filter:cache]
+use = egg:swift#memcache
+set log_name = cache
+ 
+[filter:catch_errors]
+use = egg:swift#catch_errors
+memcache_servers = {{ memcache_servers }}
+ 
+[filter:gatekeeper]
+use = egg:swift#gatekeeper
+ 
+[filter:proxy-logging]
+use = egg:swift#proxy_logging
+
+[filter:swift3]
+use = egg:swift3#swift3
+
+[filter:account_quotas]
+use = egg:swift#account_quotas
+ 
+[filter:container_quotas]
+use = egg:swift#container_quotas

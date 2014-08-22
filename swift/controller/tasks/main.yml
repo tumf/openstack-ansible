@@ -1,0 +1,17 @@
+---
+- yum: name="openstack-swift" enablerepo="{{ epel_repo }},{{ openstack_repo }}"
+
+- command: swift-ring-builder account.builder create {{ partition_power }} {{ replica }} {{ min_part_hours }}
+  args:
+    chdir: /etc/swift
+    creates: /etc/swift/account.builder
+
+- command: swift-ring-builder container.builder create {{ partition_power }} {{ replica }} {{ min_part_hours }}
+  args:
+    chdir: /etc/swift
+    creates: /etc/swift/container.builder
+
+- command: swift-ring-builder object.builder create {{ partition_power }} {{ replica }} {{ min_part_hours }}
+  args:
+    chdir: /etc/swift
+    creates: /etc/swift/object.builder

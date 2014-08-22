@@ -1,0 +1,8 @@
+---
+- yum: name="openstack-swift-object" enablerepo="{{ epel_repo }},{{ openstack_repo }}"
+- service: name="{{ item }}" state=running enabled=yes
+  with_items: object_services
+- template: src="object-server.conf.j2" dest="/etc/swift/object-server.conf"
+  notify: restart object services
+- file: path="/var/cache/swift" state="directory" owner="swift" group="swift"
+- cron: name="recon" user="swift" minute="*/5" job="/usr/bin/swift-recon-cron /etc/swift/object-server.conf"

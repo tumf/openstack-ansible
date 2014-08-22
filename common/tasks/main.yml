@@ -1,0 +1,3 @@
+---
+- yum: name="{{ rdo_release_uri }}"
+  when: install_rdo_release_yum_repository

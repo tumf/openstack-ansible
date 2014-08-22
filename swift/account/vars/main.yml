@@ -1,0 +1,6 @@
+---
+account_services:
+  - openstack-swift-account
+  - openstack-swift-account-replicator
+  - openstack-swift-account-reaper
+  - openstack-swift-account-auditor

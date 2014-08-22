@@ -1,0 +1,43 @@
+---
+- yum: name="{{item}}" enablerepo="{{ epel_repo }},{{ openstack_repo}}"
+  with_items:
+    - xinetd
+    - rsync
+# CentOS
+- yum: name="xfsprogs" enablerepo="{{ epel_repo }},{{ openstack_repo}}"
+# RedHat EL6
+#- copy: src="xfsprogs-3.1.1-14_ceph.el6.x86_64.rpm" dest="/tmp/"
+#- yum: name="/tmp/xfsprogs-3.1.1-14_ceph.el6.x86_64.rpm"
+
+
+- file: path="{{ device_dir }}" state="directory" owner="swift" group="swift"
+
+- command: mkfs.xfs -i size=1024 /dev/{{ item }}
+  with_items: swift_storage_disks
+  register: result
+  changed_when: result.rc == 0
+  ignore_errors: true
+  args:
+    creates: "{{ device_dir }}/{{ item }}"
+
+- lineinfile: dest=/etc/fstab  regexp="^/dev/{{ item }} " line="/dev/{{ item }} {{ device_dir }}/{{ item }} xfs noatime,nodiratime,nobarrier,logbufs=8 0 0"
+  with_items: swift_storage_disks
+
+- file: path="{{ device_dir }}/{{ item }}" state="directory" owner="swift" group="swift"
+  with_items: swift_storage_disks
+
+- shell: mount|grep "{{ device_dir }}/{{ item }}" || mount "{{ device_dir }}/{{ item }}"
+  with_items: swift_storage_disks
+  register: result
+  changed_when: "result.rc == 0 and result.cmd[0] == 'mount'"
+  ignore_errors: true
+
+- service: name=xinetd state=running enabled=yes
+- name: check rsync
+  shell: chkconfig --list rsync
+  register: result
+  changed_when: "'on' not in result.stdout"
+  notify: rsync on
+- template: src="rsyncd.conf.j2" dest="/etc/rsyncd.conf"
+  notify: restart xinetd
+

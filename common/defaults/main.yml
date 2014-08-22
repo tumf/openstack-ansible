@@ -1,0 +1,6 @@
+---
+install_rdo_release_yum_repository: True
+openstack_release: icehouse
+epel_repo: epel
+openstack_repo: openstack-icehouse
+rdo_release_uri: "http://repos.fedorapeople.org/repos/openstack/openstack-{{ openstack_release }}/rdo-release-{{ openstack_release }}.rpm"

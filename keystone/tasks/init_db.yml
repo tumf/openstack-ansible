@@ -1,0 +1,85 @@
+### keystone-manage db_sync
+
+- command: sudo -u keystone keystone-manage db_version
+  register: before
+  changed_when: false
+
+- shell: sudo -u keystone sh -c "keystone-manage db_sync && keystone-manage db_version"
+  register: after
+  changed_when: before.stdout != after.stdout
+  notify: restart keystone
+
+- service: name=openstack-keystone state=running enabled=yes
+
+# admin tenant
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} tenant-get admin"
+  register: result
+  changed_when: false
+  ignore_errors: yes
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} tenant-create --name admin --description 'Admin Tenant'"
+  when: result.rc == 1
+
+# admin user
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-get admin"
+  register: result
+  changed_when: false
+  ignore_errors: yes
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-create --name admin --pass admin --email admin@example.com"
+  when: result.rc == 1
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-role-add --tenant admin --user admin --role _member_"
+  when: result.rc == 1
+
+# admin role
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} role-get admin"
+  register: result
+  changed_when: false
+  ignore_errors: yes
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} role-create --name admin"
+  when: result.rc == 1
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-role-add --tenant admin --user admin --role admin"
+  when: result.rc == 1
+
+# demo tenant
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} tenant-get demo"
+  register: result
+  changed_when: false
+  ignore_errors: yes
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} tenant-create --name demo --description 'Demo Tenant'"
+  when: result.rc == 1
+
+# demo user
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-get demo"
+  register: result
+  changed_when: false
+  ignore_errors: yes
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-create --name demo --pass demo --email demo@example.com"
+  when: result.rc == 1
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-role-add --tenant demo --user demo --role _member_"
+  when: result.rc == 1
+
+# service tenant
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} tenant-get service"
+  register: result
+  changed_when: false
+  ignore_errors: yes
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} tenant-create --name service --description 'Service Tenant'"
+  when: result.rc == 1
+
+# swift user
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-get swift"
+  register: result
+  changed_when: false
+  ignore_errors: yes
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-create --name swift --pass swift --email swift@example.com"
+  when: result.rc == 1
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} user-role-add --user=swift --tenant=service --role=admin"
+  when: result.rc == 1
+- command: "keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} service-create --name=swift --type=object-store --description='OpenStack Object Storage'"
+  when: result.rc == 1
+
+- command: keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} service-get swift
+  register: result
+  changed_when: false
+  ignore_errors: true
+- command: keystone --os-endpoint http://{{ address }}:35357/v2.0 --os-token {{ admin_token }} endpoint-create --service-id={{ result.stdout_lines[5] | regex_replace('\|\s*id\s*\|\s*(.{32})\s*\|','\\1') }} --publicurl='http://{{ address }}:8080/v1/AUTH_%(tenant_id)s' --internalurl='http://{{ address }}:8080/v1/AUTH_%(tenant_id)s' --adminurl=http://{{ address }}:8080
+  when: result.rc == 1

@@ -1,0 +1,15 @@
+- yum: name="{{item}}"
+  with_items:
+    - mysql
+
+- yum: name="{{item}}" enablerepo=epel,openstack-icehouse
+  with_items:
+    - openstack-keystone
+
+- template: >-
+    src=keystone.conf.j2
+    dest=/etc/keystone/keystone.conf
+
+- command: creates=/etc/keystone/ssl keystone-manage pki_setup --keystone-user keystone --keystone-group keystone
+
+- file: path=/etc/keystone/ssl state=directory owner=keystone group=keystone mode=0770

@@ -1,0 +1,15 @@
+---
+- yum: name="{{ item }}" enablerepo="{{ epel_repo }}"
+  with_items:
+    - gcc
+    - gcc-c++
+    - python-setuptools
+    - python-devel
+    - python-pip
+    - zeromq3-devel
+    - python-argparse
+    - Cython
+- pip: name="Distribute"
+- pip: name="gevent" extra_args="pyzmq==2.2.0" state="latest"
+- pip: name="gevent-zeromq"
+- pip: name="ssbench"

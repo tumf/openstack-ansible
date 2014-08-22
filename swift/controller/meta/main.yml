@@ -1,0 +1,4 @@
+---
+dependencies:
+  - { role: openstack/common }
+  - { role: openstack/swift/common }
